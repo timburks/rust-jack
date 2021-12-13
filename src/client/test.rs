@@ -120,17 +120,19 @@ fn client_can_use_ringbuffer() {
     let _a = c
         .activate_async(
             (),
-            ClosureProcessHandler::new(move |_, _| {
-                if !sent {
-                    for (item, bufitem) in writer.peek_iter().zip(buf.iter()) {
-                        *item = *bufitem;
-                    }
+            ClosureProcessHandler::new(())
+                .with_process_fn(move |_, _, _| {
+                    if !sent {
+                        for (item, bufitem) in writer.peek_iter().zip(buf.iter()) {
+                            *item = *bufitem;
+                        }
 
-                    writer.advance(buf.len());
-                    sent = true;
-                }
-                Control::Continue
-            }),
+                        writer.advance(buf.len());
+                        sent = true;
+                    }
+                    Control::Continue
+                })
+                .with_buffer_fn(move |_, _, _| Control::Continue),
         )
         .unwrap();
 
